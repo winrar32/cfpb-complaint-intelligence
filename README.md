@@ -22,6 +22,7 @@ CFPB CSV ──► Unity Catalog volume ──► Bronze (raw Delta) ──► S
 | Table | Layer | What it holds |
 |---|---|---|
 | `complaints_bronze` | Bronze | Raw CSV, all strings, plus `_source_file`, `_ingested_at` |
+| `narratives_bronze` | Bronze | `complaint_id` + narrative text from the CFPB narratives archive |
 | `complaints_silver` | Silver | One row per complaint: typed dates, dedupe, `has_narrative`, `narrative_words`, `days_to_company`, `is_timely`, `is_monetary_relief` |
 | `dq_results` | Quality | Pass/fail log of data-quality checks per run |
 | `gold_weekly_volume` | Gold | Complaints per week × product (forecasting input) |
@@ -38,7 +39,7 @@ CFPB CSV ──► Unity Catalog volume ──► Bronze (raw Delta) ──► S
      [complaints.csv.zip](https://files.consumerfinance.gov/ccdb/complaints.csv.zip) yourself, unzip it, and upload
      `complaints.csv` to **Catalog → workspace → cfpb → raw**. If the file is too large to upload, export a filtered CSV
      (e.g., last 3 years, with narrative) from the [CFPB search page](https://www.consumerfinance.gov/data-research/consumer-complaints/search/).
-4. Run `02_clean_silver.py`, then `03_gold_and_eda.py`.
+4. Run `01b_ingest_narratives_archive.py` (narratives from the CFPB archive), then `02_clean_silver.py`, then `03_gold_and_eda.py`.
 
 Notebooks are stored in Databricks *source* format (`.py` with `# COMMAND ----------` separators), so they diff cleanly in Git.
 
@@ -65,4 +66,6 @@ Notebooks are stored in Databricks *source* format (`.py` with `# COMMAND ------
 
 ## Data
 
-Source: Consumer Financial Protection Bureau, [Consumer Complaint Database](https://www.consumerfinance.gov/data-research/consumer-complaints/). Public data; narratives are published only with consumer consent and are scrubbed of personal information by the CFPB. Raw data is not committed to this repo.
+Source: Consumer Financial Protection Bureau, [Consumer Complaint Database](https://www.consumerfinance.gov/data-research/consumer-complaints/). Raw data is not committed to this repo.
+
+**Narratives:** in August 2026 the CFPB stopped publishing complaint narratives in the live database ([release notes](https://cfpb.github.io/api/ccdb/release-notes.html), Release 24). This project loads them from the CFPB's official [narratives archive](https://www.consumerfinance.gov/foia-requests/foia-electronic-reading-room/cfpb-consumer-complaint-database-narratives-archive/) (complaints received through Aug 14, 2026) in `01b_ingest_narratives_archive` and joins them by `complaint_id`. Complaints received after that date have structured fields only. Narratives were published only with consumer consent and scrubbed of personal information by the CFPB.

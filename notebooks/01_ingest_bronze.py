@@ -127,8 +127,9 @@ display(spark.table(BRONZE_TABLE).limit(10))
 
 # COMMAND ----------
 
+# Narratives are no longer in the live CSV (CFPB removed them in Aug 2026). Notebook 01b loads them from the archive.
 expected = {
-    "date_received", "product", "issue", "consumer_complaint_narrative", "company",
+    "date_received", "product", "issue", "company",
     "state", "company_response_to_consumer", "timely_response", "complaint_id",
 }
 missing = expected - set(spark.table(BRONZE_TABLE).columns)

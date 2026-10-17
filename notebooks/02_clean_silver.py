@@ -65,6 +65,25 @@ df = (
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## 3b. Attach narratives from the archive
+# MAGIC The live CSV no longer includes narratives (removed Aug 2026). Join them from `narratives_bronze`
+# MAGIC (built by notebook 01b). Complaints received after Aug 14, 2026 will never have one.
+
+# COMMAND ----------
+
+if "consumer_complaint_narrative" in df.columns:
+    print("Bronze already has narratives; skipping the archive join.")
+elif spark.catalog.tableExists(NARRATIVES_TABLE):
+    narr = spark.table(NARRATIVES_TABLE).select("complaint_id", "consumer_complaint_narrative")
+    df = df.join(narr, "complaint_id", "left")
+    print("Joined narratives from", NARRATIVES_TABLE)
+else:
+    print("⚠️ No narratives table found. Run 01b first; continuing without narratives.")
+    df = df.withColumn("consumer_complaint_narrative", F.lit(None).cast("string"))
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## 4. Derived columns
 # MAGIC - `has_narrative`, `narrative_words`: only consumers who consented have a public narrative (needed for NLP later)
 # MAGIC - `days_to_company`: CFPB processing lag
